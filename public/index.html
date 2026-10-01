@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#02023f">
+  <meta name="description" content="Grand Prix: carreras multijugador para el equipo de software.">
+  <title>Software Grand Prix</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/brand.css">
+  <link rel="stylesheet" href="/award.css">
+</head>
+<body>
+  <main id="app">
+    <canvas id="game" aria-label="Circuito de carreras"></canvas>
+
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Grand Prix">
+        <span class="brand-mark">GP</span>
+        <span><b>GRAND PRIX</b><small>SOFTWARE SPEEDWAY</small></span>
+      </a>
+      <div class="top-actions">
+        <span id="connectionBadge" class="connection offline"><i></i><span>DESCONECTADO</span></span>
+        <button id="audioButton" class="icon-button" aria-label="Activar o silenciar audio" title="Audio">♫</button>
+        <button id="fullscreenButton" class="icon-button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button>
+      </div>
+    </header>
+
+    <section id="joinPanel" class="overlay active">
+      <div class="panel join-panel">
+        <div class="eyebrow"><span></span> EL EQUIPO PRESENTA</div>
+        <h1>EL CÓDIGO<br><em>SALE A PISTA.</em></h1>
+        <p class="lead">Grand Prix: armá la sala, compartí el link y resolvé el próximo deploy como corresponde: a tres vueltas.</p>
+
+        <form id="joinForm" autocomplete="off">
+          <label for="nameInput">TU NOMBRE</label>
+          <input id="nameInput" name="name" maxlength="16" placeholder="Ej: Martu" required>
+
+          <label for="roomInput">CÓDIGO DE SALA</label>
+          <div class="room-input">
+            <span>#</span>
+            <input id="roomInput" name="room" maxlength="18" value="oficina" required>
+          </div>
+
+          <fieldset>
+            <legend>ELEGÍ TU AUTO</legend>
+            <div id="colorPicker" class="color-picker" role="radiogroup" aria-label="Color del auto"></div>
+          </fieldset>
+
+          <div id="carShowcase" class="car-showcase">
+            <div id="selectedCarPreview" class="selected-car-preview" aria-hidden="true">
+              <i class="wheel wheel-a"></i><i class="wheel wheel-b"></i><i class="wheel wheel-c"></i><i class="wheel wheel-d"></i>
+              <i class="preview-shadow"></i><i class="preview-spoiler"></i>
+              <div class="preview-body">
+                <span class="preview-glass"></span><span class="preview-hood"></span>
+                <span class="preview-stripe"></span><span class="preview-lights"></span>
+                <span class="preview-intakes"></span>
+              </div>
+            </div>
+            <div class="car-personality">
+              <small>TU MÁQUINA</small>
+              <strong id="carPersonalityName">LA BUG HUNTER</strong>
+              <p id="carPersonalityDescription">Encuentra el problema antes de que llegue a producción.</p>
+              <span>⚖ MISMA PERFORMANCE PARA TODOS</span>
+            </div>
+          </div>
+
+          <button id="joinButton" class="primary-button" type="submit">
+            <span>ENTRAR AL PADDOCK</span><b>→</b>
+          </button>
+          <p id="joinError" class="form-error" role="alert"></p>
+        </form>
+        <div class="join-footer"><span>WASD / FLECHAS</span><span>ESPACIO = DERRAPE</span><span>HASTA 8 DEVS</span></div>
+      </div>
+    </section>
+
+    <section id="lobbyPanel" class="overlay">
+      <div class="panel lobby-panel">
+        <div class="lobby-heading">
+          <div><div class="eyebrow"><span></span> PADDOCK ABIERTO</div><h2>SALA <em id="roomCode">#OFICINA</em></h2></div>
+          <button id="shareButton" class="secondary-button">COPIAR INVITACIÓN</button>
+        </div>
+        <div id="playerGrid" class="player-grid"></div>
+        <div class="lobby-bottom">
+          <div class="rules"><b>3</b><span>VUELTAS<br>SIN ROLLBACK</span></div>
+          <div class="lobby-actions">
+            <button id="readyButton" class="ready-button">MARCARME LISTO</button>
+            <button id="startButton" class="primary-button compact" disabled><span>LARGAR CARRERA</span><b>→</b></button>
+          </div>
+        </div>
+        <p id="lobbyHint" class="lobby-hint">Esperando que todos se marquen como listos…</p>
+      </div>
+    </section>
+
+    <section id="resultsPanel" class="overlay">
+      <div class="panel results-panel">
+        <div class="eyebrow"><span></span> BANDERA A CUADROS</div>
+        <h2 id="resultTitle">CARRERA<br><em>TERMINADA.</em></h2>
+        <div id="podium" class="podium"></div>
+        <div id="awardCeremony" class="award-ceremony">
+          <div class="award-heading"><small>CEREMONIA OFICIAL</small><strong>LA DIRECTORA ENTREGA EL GRAN PREMIO</strong></div>
+          <div class="award-stage">
+            <i class="spotlight spot-left" aria-hidden="true"></i>
+            <i class="spotlight spot-right" aria-hidden="true"></i>
+            <div class="confetti-layer" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="paper-rain" aria-hidden="true"><span>📄</span><span>📃</span><span>📄</span><span>📑</span></div>
+            <i class="checker-strip" aria-hidden="true"></i>
+            <div class="award-speech speech-merge">¡MERGE APROBADO! ✓</div>
+            <div class="award-speech speech-more">¡ESPERÁ! HAY UN PREMIO MÁS… 🎁</div>
+            <div class="award-speech speech-client">
+              <small>UN SEÑOR DEL CLIENTE</small>
+              ¡BUENAS! TAMBIÉN TRAIGO<br><b>10.000 REQUERIMIENTOS MÁS</b> 📚
+            </div>
+            <div class="award-speech speech-risk">
+              <small>UNA MUJER DE RIESGOS</small>
+              ¡TODO ES MUY RIESGOSO!<br><b>TIENEN QUE BORRAR LA MITAD<br>DE LO QUE YA HICIERON</b>
+            </div>
+            <div class="award-speech speech-integ">
+              <small>DESPUÉS…</small>
+              VINO UN HOMBRE DE INTEGRACIONES<br><b>Y TRAJO 10 APIs NUEVAS PARA MAPEAR</b> 🔌
+            </div>
+            <div class="award-speech speech-ux">
+              <small>Y POR ÚLTIMO…</small>
+              VINO UNA MUJER DE PRODUCTO Y PIDIÓ<br><b>20 PASOS NUEVOS PARA EL ONBOARDING</b> 🪜
+            </div>
+            <div class="award-person boss-character">
+              <span class="person-name">LA DIRECTORA</span>
+              <div class="person-head">
+                <div class="face-set face-boss">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i>
+                  <i class="blush blush-l"></i><i class="blush blush-r"></i>
+                  <i class="mouth"></i>
+                </div>
+                <div class="face-set face-boss-shock">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i><i class="mouth"></i><i class="sweat"></i>
+                </div>
+                <i class="earring"></i>
+              </div>
+              <div class="person-body">
+                <i class="shirt"></i>
+                <b class="badge">DIR</b>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="trophy-transfer" aria-hidden="true"><span>🏆</span></div>
+            <div class="req-tower" aria-hidden="true">
+              <span class="req-top">📑</span>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <b class="req-count">×1.000</b>
+            </div>
+            <div class="award-person winner-character">
+              <span id="awardWinnerName" class="person-name">GANADOR</span>
+              <div class="person-head">
+                <i class="cap"></i>
+                <div class="face-set face-happy">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i>
+                  <i class="blush blush-l"></i><i class="blush blush-r"></i>
+                  <i class="mouth"></i>
+                </div>
+                <div class="face-set face-shock">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i><i class="mouth"></i>
+                  <i class="sweat"></i>
+                </div>
+                <div class="anime-tears" aria-hidden="true"><i></i><i></i></div>
+              </div>
+              <div class="person-body">
+                <i class="suit-stripe"></i>
+                <b class="chest-badge">★</b>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="client-load" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i>
+              <b>×10.000</b>
+            </div>
+            <div class="award-person client-character">
+              <span class="person-name">UN SEÑOR DEL CLIENTE</span>
+              <div class="person-head">
+                <i class="client-hair"></i>
+                <div class="face-set face-client">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="glasses"></i><i class="nose"></i><i class="mouth"></i>
+                  <i class="sweat"></i>
+                </div>
+              </div>
+              <div class="person-body">
+                <i class="shirt"></i><i class="tie"></i><b class="client-badge">CLI</b>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="award-person risk-character">
+              <span class="person-name">UNA MUJER DE RIESGOS</span>
+              <div class="person-head">
+                <i class="risk-hair"></i>
+                <div class="face-set face-risk">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i><i class="mouth"></i>
+                </div>
+              </div>
+              <div class="person-body">
+                <i class="shirt"></i><i class="risk-scarf"></i><b class="risk-badge">RISK</b>
+                <i class="risk-clipboard"><b>RIESGO</b><span>50%</span></i>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="award-person integ-character">
+              <span class="person-name">UN HOMBRE DE INTEGRACIONES</span>
+              <div class="person-head">
+                <i class="integ-hair"></i>
+                <div class="face-set face-integ">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i><i class="mouth"></i>
+                </div>
+              </div>
+              <div class="person-body">
+                <i class="shirt"></i><i class="integ-tie"></i><b class="integ-badge">INT</b>
+                <i class="api-case"><b>API</b><span>×10</span></i>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="award-person ux-character">
+              <span class="person-name">UNA MUJER DE PRODUCTO</span>
+              <div class="person-head">
+                <i class="ux-hair"></i>
+                <div class="face-set face-ux">
+                  <i class="brow brow-l"></i><i class="brow brow-r"></i>
+                  <i class="eye eye-l"></i><i class="eye eye-r"></i>
+                  <i class="nose"></i><i class="mouth"></i>
+                </div>
+              </div>
+              <div class="person-body">
+                <i class="shirt"></i><i class="ux-collar"></i><b class="ux-badge">UX</b>
+                <i class="steps-board"><b>ONBOARDING</b><span>20 PASOS</span></i>
+              </div>
+              <i class="person-legs"></i>
+              <i class="person-feet"></i>
+              <i class="person-shadow"></i>
+            </div>
+            <div class="scope-banner">
+              <small>PREMIO EXTRA DESBLOQUEADO</small>
+              <b>+1.000 REQUERIMIENTOS</b>
+              <span>PARA EL EQUIPO · A IMPLEMENTAR · PARA AYER</span>
+              <em class="scope-stamp">¡CAMBIÓ EL SCOPE!</em>
+            </div>
+            <div class="client-banner">
+              <small>NUEVA ENTREGA OFICIAL DEL CLIENTE</small>
+              <b>+10.000 REQUERIMIENTOS MÁS</b>
+              <span>TAMBIÉN PARA EL EQUIPO · TAMBIÉN PARA AYER</span>
+              <em class="client-stamp">SCOPE × 11</em>
+            </div>
+            <div class="risk-banner">
+              <small>DICTAMEN DE RIESGO · COMPLIANCE</small>
+              <b>BORRAR EL 50% DE LO HECHO</b>
+              <span>TODO ES MUY RIESGOSO · ROLLBACK PARCIAL OBLIGATORIO</span>
+              <em class="risk-stamp">ALTO RIESGO</em>
+            </div>
+            <div class="integ-banner">
+              <small>NUEVA INTEGRACIÓN · PARTNER EXTERNO</small>
+              <b>+10 APIs PARA MAPEAR</b>
+              <span>DOCUMENTACIÓN PENDIENTE · ENDPOINTS PARA AYER</span>
+              <em class="integ-stamp">API × 10</em>
+            </div>
+            <div class="ux-banner">
+              <small>MEJORA DE EXPERIENCIA · PRODUCTO</small>
+              <b>+20 PASOS DE ONBOARDING</b>
+              <span>UN ÚLTIMO AJUSTE · AHORA SÍ QUEDA SIMPLE</span>
+              <em class="ux-stamp">PASO 1/20</em>
+            </div>
+            <p id="awardMessage" class="award-caption">La directora entrega la Copa. Después llegan el cliente, Riesgos, Integraciones y Producto con más requerimientos, APIs y pasos de onboarding. El ganador no puede contener la emoción.</p>
+            <span class="award-joke">1 COPA · +11.000 TICKETS · −50% DE LO HECHO · +10 APIs · +20 PASOS · 2 LITROS DE LÁGRIMAS</span>
+          </div>
+        </div>
+        <div id="resultsList" class="results-list"></div>
+        <div class="results-actions">
+          <button id="restartButton" class="primary-button compact"><span>REVANCHA</span><b>↻</b></button>
+          <button id="exitButton" class="secondary-button">SALIR</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="hud" class="hud" aria-live="polite">
+      <div class="race-stat position-stat"><span>POS</span><b id="hudPosition">1<small>/1</small></b></div>
+      <div class="race-stat lap-stat"><span>VUELTA</span><b id="hudLap">1<small>/3</small></b></div>
+      <div class="race-clock"><span>TIEMPO</span><b id="hudTime">00:00.000</b></div>
+      <aside class="leaderboard"><h3>CLASIFICACIÓN</h3><ol id="leaderboard"></ol></aside>
+      <div class="speedometer"><b id="hudSpeed">0</b><span>KM/H</span><i id="speedBar"></i></div>
+      <div id="hudPowerStatus" class="power-status" role="status"></div>
+      <div id="wrongWay" class="wrong-way">⟲ SENTIDO CONTRARIO</div>
+    </section>
+
+    <div id="countdown" class="countdown" aria-live="assertive"></div>
+    <div id="announcement" class="announcement" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status"></div>
+
+    <div id="mobileControls" class="mobile-controls">
+      <div class="steer-controls">
+        <button data-control="left" aria-label="Girar a la izquierda">←</button>
+        <button data-control="right" aria-label="Girar a la derecha">→</button>
+      </div>
+      <button class="drift" data-control="handbrake" aria-label="Derrapar">DRIFT</button>
+      <div class="pedal-controls">
+        <button data-control="up" aria-label="Acelerar">▲</button>
+        <button data-control="down" aria-label="Frenar">▼</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared.js"></script>
+  <script src="/game.js"></script>
+  <script src="/brand.js"></script>
+  <script src="/award.js"></script>
+</body>
+</html>
